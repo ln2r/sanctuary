@@ -1,6 +1,4 @@
 use worker::*;
-use std::time::{SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
 use uuid::{NoContext, Timestamp, Uuid};
 use worker::wasm_bindgen::JsValue;
 
