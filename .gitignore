@@ -1,0 +1,9 @@
+target
+node_modules
+.wrangler
+
+# jetbrains
+.idea
+
+# cloudflare stuff
+wrangler.toml

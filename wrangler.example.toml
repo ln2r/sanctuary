@@ -1,0 +1,19 @@
+name = "sanctuary"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-08-16"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sanctuary"
+database_id = "YOUR_DATABASE_ID_HERE"
+
+[[kv_namespaces]]
+binding = "sanctuary"
+id = "YOUR_KV_NAMESPACE_ID_HERE"
+
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "YOUR_BUCKET_NAME_HERE"
