@@ -5,6 +5,10 @@ compatibility_date = "2025-08-16"
 [build]
 command = "cargo install -q worker-build && worker-build --release"
 
+[vars]
+api_key = "API_KEY_HERE"
+debug = "true"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "sanctuary"
