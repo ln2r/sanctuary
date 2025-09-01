@@ -1,6 +1,20 @@
 use worker::*;
 use uuid::{NoContext, Timestamp, Uuid};
 use worker::wasm_bindgen::JsValue;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Image {
+    id: String,
+    created: String,
+    updated: String,
+    deleted: String,
+    captured: String,
+    published: String,
+    path: String,
+    caption: String,
+    views: u32,
+}
 
 #[event(fetch)]
 async fn fetch(
@@ -12,6 +26,13 @@ async fn fetch(
 
     router
         .post_async("/upload", |mut req, ctx| async move {
+            // this is to check key
+            // TODO: move as function guard
+            let request_key = req.headers().get("x-sanctuary-key")?.unwrap_or_default();
+            if request_key != ctx.env.var("api_key")?.to_string() {
+                return Response::error("Unauthorized", 401)
+            }
+
             let d1 = ctx.env.d1("DB")?;
             let bucket = ctx.env.bucket("STORAGE")?;
 
@@ -41,9 +62,10 @@ async fn fetch(
                     _ => None, // set to null
                 };
 
-                d1.prepare("INSERT INTO images (id, created, captured, path, caption) VALUES (?, ?, ?, ?, ?);")
+                d1.prepare("INSERT INTO images (id, created, updated, captured, path, caption) VALUES (?, ?, ?, ?, ?);")
                     .bind(&[
                         JsValue::from(&id.to_string()),
+                        JsValue::from(&created.to_string()),
                         JsValue::from(&created.to_string()),
                         JsValue::from(&captured.to_string()),
                         JsValue::from(&path),
@@ -56,7 +78,37 @@ async fn fetch(
                     .await?;
             }
 
-            Response::ok("upload")
+            Response::ok("Success")
+        })
+        .delete_async("/delete/:id", |req, ctx| async move {
+            // this is to check key
+            // TODO: move as function guard
+            let request_key = req.headers().get("x-sanctuary-key")?.unwrap_or_default();
+            if request_key != ctx.env.var("api_key")?.to_string() {
+                return Response::error("Unauthorized", 401)
+            }
+
+            let d1 = ctx.env.d1("DB")?;
+            let post_id = ctx.param("id").unwrap().to_string();
+
+            let query = d1.prepare("SELECT * FROM images WHERE id = ?")
+                .bind(&[JsValue::from(&post_id)]);
+
+            let exist = query?.first::<Image>(None).await?;
+            console_log!("{:?}", exist);
+            match exist {
+                Some(image) => {
+                    console_log!("{:?}", image);
+                    Response::from_json(&image)
+                    
+                },
+                None => {
+                    console_log!("not found");
+                    Response::error("Not found", 404)
+                },
+            }.unwrap();
+
+            Response::ok("Success")
         })
         .run(req, env)
         .await
