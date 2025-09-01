@@ -2,6 +2,8 @@
 CREATE TABLE images  (
       id TEXT PRIMARY KEY NOT NULL,
       created TEXT NOT NULL,
+      updated TEXT NOT NULL,
+      deleted TEXT,
       captured TEXT NOT NULL,
       published TEXT,
       path TEXT NOT NULL,
