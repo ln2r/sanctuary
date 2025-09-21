@@ -110,6 +110,19 @@ async fn fetch(
 
             Response::ok("Success")
         })
+        .patch_async("/update/:id", |mut req, ctx| async move {
+            // this is to check key
+            // TODO: move as function guard
+            let request_key = req.headers().get("x-sanctuary-key")?.unwrap_or_default();
+            if request_key != ctx.env.var("api_key")?.to_string() {
+                return Response::error("Unauthorized", 401)
+            }
+
+            // let d1 = ctx.env.d1("DB")?;
+            // let post_id = ctx.param("id").unwrap().to_string();
+
+            Response::ok("Success")
+        })
         .run(req, env)
         .await
 }
