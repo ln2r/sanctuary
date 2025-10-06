@@ -6,14 +6,22 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 struct Image {
     id: String,
-    created: String,
-    updated: String,
-    deleted: String,
-    captured: String,
-    published: String,
-    path: String,
-    caption: String,
-    views: u32,
+    #[serde(default)]
+    created: Option<String>,
+    #[serde(default)]
+    updated: Option<String>,
+    #[serde(default)]
+    deleted: Option<String>,
+    #[serde(default)]
+    captured: Option<String>,
+    #[serde(default)]
+    published: Option<String>,
+    #[serde(default)]
+    path: Option<String>,
+    #[serde(default)]
+    caption: Option<String>,
+    #[serde(default)]
+    views: Option<u32>,
 }
 
 #[event(fetch)]
@@ -118,8 +126,29 @@ async fn fetch(
                 return Response::error("Unauthorized", 401)
             }
 
-            // let d1 = ctx.env.d1("DB")?;
-            // let post_id = ctx.param("id").unwrap().to_string();
+            let d1 = ctx.env.d1("DB")?;
+            let body: Image = req.json().await?;
+
+            console_log!("{:?}", body);
+
+            // check if exist
+            let exist = d1.prepare("SELECT COUNT(*) FROM images WHERE id = ?")
+                .bind(&[JsValue::from(&body.id.to_string())]);
+
+            console_log!("{:?}", exist);
+
+            // TODO: handle exist check
+
+            let query = d1.prepare("UPDATE images SET published = ?, caption = ? WHERE id = ?")
+                .bind(&[
+                    JsValue::from(&body.published.expect("published required").to_string()),
+                    JsValue::from(&body.caption.expect("caption required").to_string()),
+                    JsValue::from(&body.id.to_string()),
+                ])?
+                .run()
+                .await?;
+
+            console_log!("{:?}", query);
 
             Response::ok("Success")
         })
